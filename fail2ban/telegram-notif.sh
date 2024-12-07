@@ -24,10 +24,10 @@
 ####################################
 ### Telgram Intrgration Settings ###
 ####################################
-# On Telegram message @BotFather to create a bot and generate the API Token
+# On Telegram message @BotFather with /newbot to create a bot and generate the API Token
 # Telegram BOT API Token 
 telegramBotToken='outputFrom@BotFather'
-# On Telegram message @getmyid_bot to get your current user ID and chat ID, of which the chat ID is used below
+# On Telegram message @getmyid_bot with /start to get your current user ID and chat ID, of which the chat ID is used below
 # Telegram Chat ID
 telegramChatID='outputFrom@getmyid_bot'
 
