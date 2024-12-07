@@ -1,0 +1,17 @@
+services:
+  fail2ban:
+    container_name: fail2ban
+    hostname: fail2ban
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    #env_file: .env      
+    environment:
+      - TZ=America/New_York
+      - F2B_DB_PURGE_AGE=14d
+    image: crazymax/fail2ban:latest
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ~/fail2ban/data:/data # Data for fail2ban configurations
+      - ~/vaultwarden/vw-data/logs:/data/logs:ro # Directory path that leads to the Vaultwarden container's logs (likely also mounted by Vaultwarden)
