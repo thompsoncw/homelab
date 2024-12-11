@@ -5,7 +5,7 @@ echo "We just need the version number of the new Plex Media Server release."
 echo "Do not include the 'v.' in the input, as this isn't used in the file name."
 sleep 1
 echo "Example: '1.40.0.7998-c29d4c0c8' not 'v.1.40.0.7998-c29d4c0c8'"
-echo "Enter the version number of the server update:"
+echo -en "Enter the version number of the server update:"
 read versionNumber
 # Read back the input to verify
 echo "You entered $versionNumber for the new Plex server version."
