@@ -1,7 +1,7 @@
 services:
   vaultwarden:
     image: vaultwarden/server:latest
-    container_name: vaultwarden
+    container_name: himitsu-vw
     restart: unless-stopped
     ports:
       - 8080:80 # you can replace the 11001 with your preferred port
@@ -9,12 +9,14 @@ services:
       - ./vw-data/:/data/
     env_file: .env
     environment:
+      ########################################
+      ### New User/Vault Creation Settings ###
+      ########################################
 
-      ## New User/Vault Creation Settings
       ## Setting SIGNUPS_ALLOWED to "true" allows anyone who can reach the site to sign up
       ## Setting INVITATIONS_ALLOWED to "true" allows Organization Admins to invite users, independent of the SIGNUPS_ALLOWED setting
-      SIGNUPS_ALLOWED: "false"
-      INVITATIONS_ALLOWED: "false"
+      SIGNUPS_ALLOWED: "true"
+      INVITATIONS_ALLOWED: "true"
 
       ## Controls if new users need to verify their email address upon registration
       ## Note that setting this option to true prevents logins until the email address has been verified!
@@ -34,10 +36,14 @@ services:
       ## even if SIGNUPS_ALLOWED is set to false
       # SIGNUPS_DOMAINS_WHITELIST=example.com,example.net,example.org
 
+      #################################################
+      ### Organization creation/invitation settings ###
+      #################################################
+
       ## Controls whether event logging is enabled for organizations
       ## This setting applies to organizations.
       ## Disabled by default. Also check the EVENT_CLEANUP_SCHEDULE and EVENTS_DAYS_RETAIN settings.
-      # ORG_EVENTS_ENABLED: "true"
+      ORG_EVENTS_ENABLED: "true"
 
       ## Controls which users can create new orgs.
       ## Blank or 'all' means all users can create orgs (this is the default):
@@ -45,16 +51,16 @@ services:
       ## 'none' means no users can create orgs:
       # ORG_CREATION_USERS: "none"
       ## A comma-separated list means only those users can create orgs:
-      # ORG_CREATION_USERS: trusted.user@example.com,
-
+      # ORG_CREATION_USERS: user@example.com, user@differentExample.com
+      
       ## Invitations org admins to invite users, even when signups are disabled
       # INVITATIONS_ALLOWED: "true"
       ## Name shown in the invitation emails that don't come from a specific organization
-      # INVITATION_ORG_NAME: Contso
+      INVITATION_ORG_NAME: Vaultwarden
 
       ## The number of hours after which an organization invite token, emergency access invite token,
       ## email verification token and deletion request token will expire (must be at least 1)
-      # INVITATION_EXPIRATION_HOURS: 96
+      INVITATION_EXPIRATION_HOURS: 96
 
       ###########################
       ### SMTP Email settings ###
@@ -63,9 +69,9 @@ services:
       ## Mail specific settings, set SMTP_FROM and either SMTP_HOST or USE_SENDMAIL to enable the mail service.
       ## To make sure the email links are pointing to the correct host, set the DOMAIN variable.
       ## Note: if SMTP_USERNAME is specified, SMTP_PASSWORD is mandatory
-      SMTP_HOST: smtp.example.tld
+      SMTP_HOST: smtp.emailProvider.tld
       SMTP_FROM: ${VAULTWARDEN_SMTP_FROM}
-      # SMTP_FROM_NAME:
+      SMTP_FROM_NAME: Vaultwarden
       SMTP_USERNAME: ${VAULTWARDEN_SMTP_USER}
       SMTP_PASSWORD: ${VAULTWARDEN_SMTP_PASS}
       SMTP_TIMEOUT: 15
@@ -76,27 +82,36 @@ services:
       ## - "force_tls": The default port is 465.
       ## - "off": The default port is 25.
       ## Ports 587 (submission) and 25 (smtp) are standard without encryption and with encryption via STARTTLS (Explicit TLS). Port 465 (submissions) is used for encrypted submission (Implicit TLS).
-      SMTP_SECURITY: "force_tls" 
+      SMTP_SECURITY: "force_tls"
       SMTP_PORT: 465
+
+      ## Embed images as email attachments
+      # SMTP_EMBED_IMAGES=true
 
       ## SMTP debugging
       ## When set to true this will output very detailed SMTP messages.
       ## WARNING: This could contain sensitive information like passwords and usernames! Only enable this during troubleshooting!
       # SMTP_DEBUG=false
 
-      ## Domain Settings
+      #######################
+      ### Domain Settings ###
+      #######################
+
       ## The domain must match the address from where you access the server
       ## It's recommended to configure this value, otherwise certain functionality might not work,
       ## like attachment downloads, email links and U2F.
-      ## For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free certificates
-      DOMAIN: "https://vault.yourdomain.tld" # Your domain; vaultwarden needs to know it's https to work properly with attachments
+      ## For U2F to work, the server must use HTTPS, you can use Let's Encrypt for free cer
+      DOMAIN: "https://himitsu.thompsonnet.cc" # Your domain; vaultwarden needs to know it's https to work properly with attachments
+      #ROCKET_TLS: '{certs="/ssl/himitsu.crt",key="/ssl/himitsu.key"}' # Specifies where the self-signed certificate and key is stored in the container's enviroment, should not be used for production servers
       ## Client IP Header, used to identify the IP of the client, defaults to "X-Real-IP"
       ## Set to the string "none" (without quotes), to disable any headers and just use the remote IP
-      ## CF-Connecting-IP reveals the client's Public IP in the http request header so fail2ban can do it's job (Working through haproxy-2.8.3)
-      IP_HEADER: CF-Connecting-IP 
+      IP_HEADER: CF-Connecting-IP # CF-Connecting-IP to reveal client's Public IP in the http request header so fail2ban can do it's job
       TZ: America/New_York
 
-      ## User Login Settings
+      ######################################
+      ### Vault Login Behaviors/Settings ###
+      ######################################
+
       ## Number of minutes to wait before a 2FA-enabled login is considered incomplete,
       ## resulting in an email notification. An incomplete 2FA login is one where the correct
       ## master password was provided but the required 2FA step was not completed, which
@@ -113,43 +128,62 @@ services:
       ## Note that this applies to both the login and the 2FA, so it's recommended to allow a burst size of at least 2.
       LOGIN_RATELIMIT_MAX_BURST: 4
 
-      ## User/Vault Settings
+      ###########################
+      ### User/Vault Settings ###
+      ###########################
+
       ## Controls whether users can set password hints. This setting applies globally to all users.
       PASSWORD_HINTS_ALLOWED: "false"
       ## Number of days to wait before auto-deleting a trashed item.
       ## If unset (the default), trashed items are not auto-deleted.
       ## This setting applies globally, so make sure to inform all users of any changes to this setting.
       TRASH_AUTO_DELETE_DAYS: 14
+      ## Icon blacklist Regex
+      ## Any domains or IPs that match this regex won't be fetched by the icon service.
+      ## Useful to hide other servers in the local network. Check the WIKI for more details
+      ## NOTE: Always enclose this regex withing single quotes!
+      ICON_BLACKLIST_REGEX: '(192\.168\.0\.[0-9]+)|(192\.168\.1\.[0-9]+)|(^.+\.localDomain\.lan$)|(^.+\..+\.localDomain\.lan$)'
 
-      ## Admin Page Settings
+      ###########################
+      ### Admin Page Settings ###
+      ###########################
+
       ## Token for the admin interface, preferably an Argon2 PCH string
       ## Vaultwarden has a built-in generator by calling `vaultwarden hash` from the container's terminal
       ## For details see: https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page#secure-the-admin_token
       ## If ADMIN_TOKEN is not set, the admin panel is disabled
-      ADMIN_TOKEN: ${VAULTWARDEN_ADMIN_TOKEN}
+      # ADMIN_TOKEN: ${VAULTWARDEN_ADMIN_TOKEN}
       ## ADMIN_SESSION_LIFETIME sets the lifetime of admin sessions to this value (in minutes).
-      ADMIN_SESSION_LIFETIME: 20
+      # ADMIN_SESSION_LIFETIME: 20
       ## Number of seconds, on average, between admin login requests from the same IP address before rate limiting kicks in.
-      ADMIN_RATELIMIT_SECONDS: 10
+      # ADMIN_RATELIMIT_SECONDS: 10
       ## Allow a burst of requests of up to this size, while maintaining the average indicated by `ADMIN_RATELIMIT_SECONDS`.
-      ADMIN_RATELIMIT_MAX_BURST: 3
+      # ADMIN_RATELIMIT_MAX_BURST: 3      
 
-      ## Mobile Client Push Notification settings
+      ################################################
+      ### Mobile Client Push Notification settings ###
+      ################################################
+
       ## Setting to PUSH_ENABLED to "true" enables mobile clients to automatically sync vaults between mobile apps, web extentions and the web vault
       ## The values for PUSH_INSTALLATION_ID and PUSH_INSTALLATION_KEY can be obtained by registering at https://bitwarden.com/host/
       PUSH_ENABLED: "true"
       PUSH_INSTALLATION_ID: ${VAULTWARDEN_PUSH_ID}
       PUSH_INSTALLATION_KEY: ${VAULTWARDEN_PUSH_KEY}
 
-      ## Third Party Settings
-      ## Required to enable to the Have I Been Pwned integration
-      ## HaveIBeenPwned API Key can be requested at https://haveibeenpwned.com/API/Key
-      HIBP_API_KEY: ${VAULTWARDEN_HIBP_API_KEY} 
-      ## Yubico Yubikey Settings
-      YUBICO_CLIENT_ID: ${VAULTWARDEN_YUBICO_ID}
-      YUBICO_SECRET_KEY: ${VAULTWARDEN_YUBICO_KEY}
+      ############################
+      ### Third Party Settings ###
+      ############################
 
-      ## Logging Settings
+      ## HaveIBeenPwned API Key, request it here: https://haveibeenpwned.com/API/Key
+      HIBP_API_KEY: ${VAULTWARDEN_HIBP_API_KEY} # Required to enable to the Have I Been Pwned integration
+      ## Yubico Yubikey Settings
+      YUBICO_CLIENT_ID: ${VAULTWARDEN_YUBICO_ID}    # Black Key
+      YUBICO_SECRET_KEY: ${VAULTWARDEN_YUBICO_KEY}    # Black Key
+
+      ########################
+      ### Logging Settings ###
+      ########################
+
       ## Specifiy where the logs are stored in the container's enviroment with the LOG_FILE setting.
       ## Setting EXTENDED_LOGGING to "true" allows the log level to be adjusted, and the LOG_LEVEL configures the
       ## level of logging between the following options: "trace", "debug", "info", "warn", "error" or "off"
