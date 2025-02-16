@@ -19,7 +19,7 @@ read versionNumber
 if [[ $versionNumber =~ $versionA ]]; then
     cleanVersion=${versionNumber#v.}
 elif [[ $versionNumber =~ $versionB ]]; then
-    cleanVersion=$versionB
+    cleanVersion=$versionNumber
 else
     echo 'The input "'$versionNumber'" does not match either input example.'
     sleep 1
